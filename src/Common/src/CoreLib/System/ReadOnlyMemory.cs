@@ -15,6 +15,29 @@ using Internal.Runtime.CompilerServices;
 namespace System
 {
     /// <summary>
+    /// TBD
+    /// </summary>
+    public struct Char8 {
+        byte _value;
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        public static implicit operator byte(Char8 char8) => char8._value;
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        public static implicit operator Char8(byte utf8CodeUnit) => new Char8() { _value = utf8CodeUnit };
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        public static ReadOnlyMemory<Char8> Create(byte[] utf8Bytes)
+            => new ReadOnlyMemory<Char8>((object)utf8Bytes, 0, utf8Bytes.Length);
+    }
+    
+    /// <summary>
     /// Represents a contiguous region of memory, similar to <see cref="ReadOnlySpan{T}"/>.
     /// Unlike <see cref="ReadOnlySpan{T}"/>, it is not a byref-like type.
     /// </summary>
@@ -207,7 +230,20 @@ namespace System
                 }
                 else if (_object != null)
                 {
-                    return new ReadOnlySpan<T>((T[])_object, _index, _length & RemoveFlagsBitMask);
+                    if (typeof(T) == typeof(Char8)) {
+                        Char8[] char8Array = _object as Char8[];
+                        if(char8Array != null) {
+                            return new ReadOnlySpan<T>((T[])_object, _index, _length & RemoveFlagsBitMask);
+                        }
+                        else {
+                            var byteArray = (byte[])_object;
+                            return new ReadOnlySpan<T>(Unsafe.As<byte[], T[]>(ref byteArray), _index, _length & RemoveFlagsBitMask);
+                        }
+
+                    }
+                    else {
+                        return new ReadOnlySpan<T>((T[])_object, _index, _length & RemoveFlagsBitMask);
+                    }
                 }
                 else
                 {

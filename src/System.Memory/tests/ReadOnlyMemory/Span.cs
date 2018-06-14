@@ -26,6 +26,18 @@ namespace System.MemoryTests
         }
 
         [Fact]
+        public static void Char8SpanFromCtorArrayByte()
+        {
+            byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes("Hello World!");
+            ReadOnlyMemory<Char8> memory = Char8.Create(utf8Bytes);
+            ReadOnlySpan<Char8> codeUnits = memory.Span;
+            Assert.Equal(utf8Bytes.Length, codeUnits.Length);
+            for(int i = 0; i < utf8Bytes.Length; i++) {
+                Assert.Equal(utf8Bytes[i], (byte)codeUnits[i]);
+            }
+        }
+
+        [Fact]
         public static void SpanFromCtorArrayLong()
         {
             long[] a = { 91, -92, 93, 94, -95 };
