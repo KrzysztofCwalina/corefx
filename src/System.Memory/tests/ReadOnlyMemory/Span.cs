@@ -38,6 +38,45 @@ namespace System.MemoryTests
         }
 
         [Fact]
+        public static void Char8SpanFromCtorMemoryByte()
+        {
+            byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes("Hello World!");
+            ReadOnlyMemory<byte> utf8Memory = utf8Bytes;
+            ReadOnlyMemory<Char8> memory = Char8.Create(utf8Memory);
+            ReadOnlySpan<Char8> codeUnits = memory.Span;
+            Assert.Equal(utf8Bytes.Length, codeUnits.Length);
+            for(int i = 0; i < utf8Bytes.Length; i++) {
+                Assert.Equal(utf8Bytes[i], (byte)codeUnits[i]);
+            }
+        }
+
+        class MM<T> : MemoryManager<T>
+        {
+            T[] _array;
+
+            public MM(T[] array) => _array = array;
+            public override Span<T> GetSpan() => _array.AsSpan();
+
+            public override MemoryHandle Pin(int elementIndex = 0) => throw new NotImplementedException();
+            public override void Unpin() => throw new NotImplementedException();
+            protected override void Dispose(bool disposing) => throw new NotImplementedException();
+        }
+
+        [Fact]
+        public static void Char8SpanFromCtorMMByte()
+        {
+            byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes("Hello World!");
+            MemoryManager<byte> mm = new MM<byte>(utf8Bytes);
+            Memory<byte> byteMemory = mm.Memory;
+            ReadOnlyMemory<Char8> memory = Char8.Create(byteMemory);
+            ReadOnlySpan<Char8> codeUnits = memory.Span;
+            Assert.Equal(utf8Bytes.Length, codeUnits.Length);
+            for(int i = 0; i < utf8Bytes.Length; i++) {
+                Assert.Equal(utf8Bytes[i], (byte)codeUnits[i]);
+            }
+        }
+
+        [Fact]
         public static void SpanFromCtorArrayLong()
         {
             long[] a = { 91, -92, 93, 94, -95 };

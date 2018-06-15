@@ -141,5 +141,17 @@ namespace System.Runtime.InteropServices
             int newLength = checked((int)((long)span.Length * Unsafe.SizeOf<TFrom>() / Unsafe.SizeOf<TTo>()));
             return new ReadOnlySpan<TTo>(Unsafe.As<Pinnable<TTo>>(span.Pinnable), span.ByteOffset, newLength);
         }
+
+        internal static ReadOnlySpan<TTo> UnsafeCast<TFrom, TTo>(ReadOnlySpan<TFrom> span)
+        {
+            if (SpanHelpers.IsReferenceOrContainsReferences<TFrom>())
+                ThrowHelper.ThrowArgumentException_InvalidTypeWithPointersNotSupported(typeof(TFrom));
+
+            if (SpanHelpers.IsReferenceOrContainsReferences<TTo>())
+                ThrowHelper.ThrowArgumentException_InvalidTypeWithPointersNotSupported(typeof(TTo));
+
+            int newLength = checked((int)((long)span.Length * Unsafe.SizeOf<TFrom>() / Unsafe.SizeOf<TTo>()));
+            return new ReadOnlySpan<TTo>(Unsafe.As<Pinnable<TTo>>(span.Pinnable), span.ByteOffset, newLength);
+        }
     }
 }

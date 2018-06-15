@@ -35,6 +35,12 @@ namespace System
         /// </summary>
         public static ReadOnlyMemory<Char8> Create(byte[] utf8Bytes)
             => new ReadOnlyMemory<Char8>((object)utf8Bytes, 0, utf8Bytes.Length);
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        public static ReadOnlyMemory<Char8> Create(ReadOnlyMemory<byte> utf8Bytes)
+            => ReadOnlyMemory<Char8>.Create(utf8Bytes);
     }
     
     /// <summary>
@@ -121,6 +127,9 @@ namespace System
             _index = start;
             _length = length;
         }
+
+        internal static ReadOnlyMemory<Char8> Create(ReadOnlyMemory<byte> utf8) 
+            => new ReadOnlyMemory<Char8>(utf8._object, utf8._index, utf8._length);
 
         /// <summary>
         /// Defines an implicit conversion of an array to a <see cref="ReadOnlyMemory{T}"/>
@@ -217,7 +226,18 @@ namespace System
                 {
                     Debug.Assert(_length >= 0);
                     Debug.Assert(_object != null);
-                    return ((MemoryManager<T>)_object).GetSpan().Slice(_index & RemoveFlagsBitMask, _length);
+                    if (typeof(T) != typeof(Char8)) {
+                        return ((MemoryManager<T>)_object).GetSpan().Slice(_index & RemoveFlagsBitMask, _length);
+                    }
+                    else {
+                        var mm = _object as MemoryManager<T>;
+                        if (mm != null) return mm.GetSpan().Slice(_index & RemoveFlagsBitMask, _length);
+                        else {
+                            var bmm = (MemoryManager<byte>)_object;
+                            Span<byte> bytes = bmm.GetSpan().Slice(_index & RemoveFlagsBitMask, _length);
+                            return MemoryMarshal.UnsafeCast<byte, T>(bytes);                     
+                        }
+                    }
                 }
                 else if (typeof(T) == typeof(char) && _object is string s)
                 {
@@ -230,19 +250,17 @@ namespace System
                 }
                 else if (_object != null)
                 {
-                    if (typeof(T) == typeof(Char8)) {
+                    if (typeof(T) != typeof(Char8)) {
+                        return new ReadOnlySpan<T>((T[])_object, _index, _length & RemoveFlagsBitMask);
+                    }
+                    else {
                         Char8[] char8Array = _object as Char8[];
-                        if(char8Array != null) {
-                            return new ReadOnlySpan<T>((T[])_object, _index, _length & RemoveFlagsBitMask);
-                        }
+                        if(char8Array != null) return new ReadOnlySpan<T>((T[])_object, _index, _length & RemoveFlagsBitMask);
                         else {
                             var byteArray = (byte[])_object;
                             return new ReadOnlySpan<T>(Unsafe.As<byte[], T[]>(ref byteArray), _index, _length & RemoveFlagsBitMask);
                         }
 
-                    }
-                    else {
-                        return new ReadOnlySpan<T>((T[])_object, _index, _length & RemoveFlagsBitMask);
                     }
                 }
                 else

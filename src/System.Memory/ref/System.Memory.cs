@@ -11,7 +11,9 @@ namespace System
         byte _value;
         public static implicit operator byte(Char8 char8) { throw null; }
         public static implicit operator Char8(byte utf8CodeUnit) { throw null; }
+
         public static ReadOnlyMemory<Char8> Create(byte[] utf8Bytes) { throw null; }
+        public static ReadOnlyMemory<Char8> Create(ReadOnlyMemory<byte> utf8Bytes) { throw null; }
     }
 
     public static partial class MemoryExtensions
